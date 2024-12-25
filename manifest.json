@@ -1,0 +1,29 @@
+{
+    "manifest_version": 3,
+    "name": "RealDebrid Interceptor",
+    "author": "Max Braudel",
+    "license": "MIT",
+    "version": "1.0",
+    "web_accessible_resources": [{
+        "resources": ["images/icons/*", "images/*"],
+        "matches": ["<all_urls>"]
+    }],
+    "description": "A Chrome extension that automatically debrids and downloads hoster or torrent links via your RealDebrid account upon clicking.",
+    "permissions": [
+        "activeTab",
+        "downloads",
+        "storage"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
+    ]
+}
