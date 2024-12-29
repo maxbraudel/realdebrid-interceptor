@@ -501,7 +501,7 @@ async function createEventListner() {
 
                             let errorMessage = error.message
 
-                            if (errorMessage.includes('bad_token')) {
+                            if (errorMessage.includes('bad_token') || errorMessage.includes('401')) {
                                 errorMessage = 'Your RealDebrid API key is invalid';
                                 // open popup to enter new api key
                                 chrome.runtime.sendMessage({ action: 'openPopup' });
