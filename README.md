@@ -34,4 +34,4 @@ A Chrome extension that automatically debrids and downloads hoster or torrent li
 
 ## License
 
-This project is licensed under the MIT License
+This plugin is released under the [MIT License](LICENSE).
