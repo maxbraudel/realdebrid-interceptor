@@ -11,54 +11,81 @@ function testIfMacOS() {
 const isMacOS = testIfMacOS();
 
 const supportedHosters = [
-    "1fichier",
-    "4shared",
-    "clicknupload",
-    "dailymotion",
-    "dailyuploads",
-    "ddownload",
-    "ddl",
-    "drop",
-    "dropapk",
-    "dropbox",
-    "fikper",
-    "file",
-    "filefactory",
-    "filenext",
-    "filespace",
-    "filestore",
-    "flashbit",
-    "gigapeta",
-    "google",
-    "drive",
-    "hexupload",
-    "hexload",
-    "hitfile",
-    "icloud",
-    "isra",
-    "katfile",
-    "mediafire",
-    "mega",
-    "prefiles",
-    "radiotunes",
-    "rapidgator",
-    "rg",
-    "redtube",
-    "scribd",
-    "send",
-    "sendspace",
-    "terabytez",
-    "turbobit",
-    "uploady",
-    "usersdrive",
-    "vimeo",
-    "voe",
-    "wipfiles",
-    "worldbytez",
-    "wupfile",
-    "salefiles",
-    "youporn"
-];
+    "1fichier.com",
+    "4shared.com",
+    "clicknupload.org",
+    "clicknupload.me",
+    "clicknupload.cc",
+    "dailymotion.com",
+    "dailyuploads.net",
+    "ddownload.com",
+    "ddl.to",
+    "drop.download",
+    "dropapk.to",
+    "dropbox.com",
+    "fikper.com",
+    "file.al",
+    "filefactory.com",
+    "filenext.com",
+    "filespace.com",
+    "filestore.to",
+    "flashbit.cc",
+    "gigapeta.com",
+    "drive.google.com",
+    "docs.google.com",
+    "hexupload.net",
+    "hexload.com",
+    "hitfile.net",
+    "icloud.com",
+    "isra.cloud",
+    "katfile.com",
+    "mediafire.com",
+    "mega.nz",
+    "mega.io",
+    "prefiles.com",
+    "radiotunes.com",
+    "rapidgator.net",
+    "rg.to",
+    "redtube.com",
+    "scribd.com",
+    "send.cm",
+    "send.now",
+    "sendspace.com",
+    "terabytez.cc",
+    "turbobit.net",
+    "uploady.io",
+    "usersdrive.com",
+    "vimeo.com",
+    "voe.sx",
+    "wipfiles.net",
+    "worldbytez.com",
+    "wupfile.com",
+    "salefiles.com",
+    "youporn.com"
+  ];
+
+function isThisUrlFromAnSupportedHoster(url) {
+    try {
+        // Convert to lowercase for case-insensitive comparison
+        let cleanUrl = url.toLowerCase();
+        
+        // Remove protocol if it exists at the beginning
+        cleanUrl = cleanUrl.replace(/^https?:\/\//, '');
+        
+        // Remove www. if it exists at the beginning
+        cleanUrl = cleanUrl.replace(/^www\./, '');
+        
+        // Check if the cleaned URL starts with any of our domains
+        return supportedHosters.some(domain => {
+            // Create a regex pattern that matches the domain at the start
+            // followed by either end of string or a forward slash
+            const pattern = new RegExp(`^${domain.replace(/\./g, '\\.')}(?:$|\/)`);
+            return pattern.test(cleanUrl);
+        });
+    } catch (error) {
+        return false;
+    }
+}
 
 let toastDownloadingPhaseInterval
 
@@ -210,12 +237,6 @@ function createToast(inputParameters) {
     toastTimeOut = setTimeout(removeToast, duration);
 
     container.addEventListener('mouseover', removeToast);
-}
-
-
-
-function isThisUrlFromAnSupportedHoster(url) {
-    return supportedHosters.some(hoster => url.includes("https://" + hoster));
 }
 
 function isThisUrlATorrentMagnet(url) {
