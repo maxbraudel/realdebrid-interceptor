@@ -1,4 +1,3 @@
-
 const hotKeyCtrl = chrome.runtime.getURL('images/hotKeyCtrl.svg');
 const hotKeyCmd = chrome.runtime.getURL('images/hotKeyCmd.svg');
 const hotKeyShift = chrome.runtime.getURL('images/hotKeyShift.svg');
@@ -250,367 +249,367 @@ let defaultActionTimeout;
 
 let defaultAction = false;
 
-document.addEventListener('click', function(event) {
 
-    // Check if the clicked element is a link or has a link parent
-    const link = event.target.closest('a');
-    
-    if (link) {
 
-        clearTimeout(defaultActionTimeout)
+async function createEventListner() {
 
-        async function action() {
+    console.log("createEventListner")
 
-            if (defaultAction === true || ((event.ctrlKey || event.metaKey) && event.shiftKey)) {
-                defaultAction = false;
-                return;
-            }
+    try {
 
-            // Prevent the default link behavior
-            event.preventDefault();
+        document.addEventListener('click', function(event) {
+
+            // Check if the clicked element is a link or has a link parent
+            const link = event.target.closest('a');
             
-            // Get the href attribute
-            const url = link.href;
-            
-            try {
+            if (link) {
 
-                if (isThisUrlATorrentMagnet(url)) {
+                clearTimeout(defaultActionTimeout)
 
-                    if (canClickOnMagnetLink === false) {
+                async function action() {
+
+                    if (defaultAction === true || ((event.ctrlKey || event.metaKey) && event.shiftKey)) {
+                        defaultAction = false;
                         return;
                     }
 
-                    canClickOnMagnetLink = false;
-                
+                    // Prevent the default link behavior
+                    event.preventDefault();
+                    
+                    // Get the href attribute
+                    const url = link.href;
+                    
                     try {
 
-                        createToast({
-                            message: `
-                                <div style="text-align: center;">
-                                    <p>Processing torrent link...</p>
-                                </div>
-                            `,
-                            duration: 10000
-                        });
+                        if (isThisUrlATorrentMagnet(url)) {
 
-                        console.log('Torrent link clicked:', url);
-                
-                        const isActive = await isTorrentActive(url);
-
-                        console.log(isActive)
-                
-                        // If control key is pressed
-                        if (event.ctrlKey || event.metaKey) {
-                            if (isActive.isActive === true) {
-                                clearInterval(toastDownloadingPhaseInterval);
-                                createToast({
-                                    message:`
-                                        <div style="text-align: center;">
-                                            <p>Torrent removed</p>
-                                        </div>
-                                    `,
-                                    duration: 1000,
-                                    backgroundColor: 'rgba(87, 255, 131, 0.75)'
-                                });
-                                await removeTorrent(isActive.torrentInfo.id);
-                            } else {
-                                createToast({
-                                    message:`
-                                        <div style="text-align: center;">
-                                            <p>This torrent file is not in your list or has already been removed</p>
-                                        </div>
-                                    `,
-                                    backgroundColor: 'rgba(255, 87, 87, 0.75)'
-                                });
-                                console.log('This torrent file is not in your list and cannot be removed');
+                            if (canClickOnMagnetLink === false) {
+                                return;
                             }
-                            return;
-                        }
-                
-                        if (isActive.isActive === true) {
-                            console.log('Torrent is active');
-                            result = isActive.torrentInfo;
-                        } else {
-                            
-                            console.log('Torrent is not active');
-                            result = await processTorrent(url);
-                        }
-                
-                        console.log('Torrent processed:', result);
-                
-                        if (result.status === 'downloaded') {
-                            const realdebridUrl = result.links[0];
 
-                            const secondResult = await getUnrestrictedLink(realdebridUrl);
-                            createToast({
-                                message:`
-                                    <div style="text-align: center;">
-                                        <p>Downloading file</p>
-                                        <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${secondResult.filename}</p>
-                                    </div>
-                                `, 
-                                duration: 5000, 
-                                backgroundColor: 'rgba(87, 255, 131, 0.75)'
-                            });
+                            canClickOnMagnetLink = false;
+                        
+                            try {
 
-                            await removeTorrent(result.id);
-                        } else {
-                            if (event.shiftKey || isActive.isActive === true) {
-
-                                function displayProgress(progress) {
-                                    createToast({
-                                        message: `
-                                            <div style="width: 30vw; text-align: center; display:flex; flex-direction: column; gap: 5px;">
-                                                <p>Downloading torrent</p>
-                                                <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${result.filename}</p>
-                                                <div style="display: flex; flex-direction: column; justify-content: center;">
-                                                    <p style="position: relative; text-align: center; color: white;">${progress}%</p>
-                                                    <div class="loading-bar" style="position: absolute; z-index: -1; background-color: green; width: calc(${result.progress / 100} * 30vw); height: 20px;"></div>
-                                                    <div style="position: absolute; z-index: -2; background-color: grey; width: 30vw; height: 20px"></div>
-                                                </div>
-                                                <p style="font-weight: bold; font-size: 14px;">${isMacOS ? `<img class="icon" src="${hotKeyCmd}">` : `<img class="icon" src="${hotKeyCtrl}">`} on the link to cancel the download</p>
-                                            </div>
-                                        `,
-                                        duration: 10000000,
-                                    });
-                                }
-
-                                displayProgress(result.progress);
-
-                                toastDownloadingPhaseInterval = setInterval(async () => {
-
-                                    const isActive = await isTorrentActive(url);
-                                    result = isActive.torrentInfo;
-
-                                    console.log(result)
-
-                                    if (result.status === 'downloaded') {
-                                        clearInterval(toastDownloadingPhaseInterval);
-
-                                        const realdebridUrl = result.links[0];
-            
-                                        const secondResult = await getUnrestrictedLink(realdebridUrl);
-                                        createToast({
-                                            message:`
-                                                <div style="text-align: center;">
-                                                    <p>Downloading file</p>
-                                                    <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${secondResult.filename}</p>
-                                                </div>
-                                            `, 
-                                            duration: 5000, 
-                                            backgroundColor: 'rgba(87, 255, 131, 0.75)'
-                                        });
-            
-                                        await removeTorrent(result.id);
-
-                                    } else {
-
-                                    displayProgress(result.progress);
-
-                                    }
-
-                                }, 3000);
-                                
-                            } else {
                                 createToast({
                                     message: `
                                         <div style="text-align: center;">
-                                            <p>This file is not cached on RealDebrid</p>
-                                            <p style="font-weight: bold; font-size: 14px"><img class="icon" src="${hotKeyShift}"> on the link if you still want to download it</p>
+                                            <p>Processing torrent link...</p>
                                         </div>
                                     `,
-                                    duration: 3000
+                                    duration: 10000
                                 });
-                                await removeTorrent(result.id);
+
+                                console.log('Torrent link clicked:', url);
+                        
+                                const isActive = await isTorrentActive(url);
+
+                                console.log(isActive)
+                        
+                                // If control key is pressed
+                                if (event.ctrlKey || event.metaKey) {
+                                    if (isActive.isActive === true) {
+                                        clearInterval(toastDownloadingPhaseInterval);
+                                        createToast({
+                                            message:`
+                                                <div style="text-align: center;">
+                                                    <p>Torrent removed</p>
+                                                </div>
+                                            `,
+                                            duration: 1000,
+                                            backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                        });
+                                        await removeTorrent(isActive.torrentInfo.id);
+                                    } else {
+                                        createToast({
+                                            message:`
+                                                <div style="text-align: center;">
+                                                    <p>This torrent file is not in your list or has already been removed</p>
+                                                </div>
+                                            `,
+                                            backgroundColor: 'rgba(255, 87, 87, 0.75)'
+                                        });
+                                        console.log('This torrent file is not in your list and cannot be removed');
+                                    }
+                                    return;
+                                }
+                        
+                                if (isActive.isActive === true) {
+                                    console.log('Torrent is active');
+                                    result = isActive.torrentInfo;
+                                } else {
+                                    
+                                    console.log('Torrent is not active');
+                                    result = await processTorrent(url);
+                                }
+                        
+                                console.log('Torrent processed:', result);
+                        
+                                if (result.status === 'downloaded') {
+                                    const realdebridUrl = result.links[0];
+
+                                    const secondResult = await getUnrestrictedLink(realdebridUrl);
+                                    createToast({
+                                        message:`
+                                            <div style="text-align: center;">
+                                                <p>Downloading file</p>
+                                                <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${secondResult.filename}</p>
+                                            </div>
+                                        `, 
+                                        duration: 5000, 
+                                        backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                    });
+
+                                    await removeTorrent(result.id);
+                                } else {
+                                    if (event.shiftKey || isActive.isActive === true) {
+
+                                        function displayProgress(progress) {
+                                            createToast({
+                                                message: `
+                                                    <div style="width: 30vw; text-align: center; display:flex; flex-direction: column; gap: 5px;">
+                                                        <p>Downloading torrent</p>
+                                                        <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${result.filename}</p>
+                                                        <div style="display: flex; flex-direction: column; justify-content: center;">
+                                                            <p style="position: relative; text-align: center; color: white;">${progress}%</p>
+                                                            <div class="loading-bar" style="position: absolute; z-index: -1; background-color: green; width: calc(${result.progress / 100} * 30vw); height: 20px;"></div>
+                                                            <div style="position: absolute; z-index: -2; background-color: grey; width: 30vw; height: 20px"></div>
+                                                        </div>
+                                                        <p style="font-weight: bold; font-size: 14px;">${isMacOS ? `<img class="icon" src="${hotKeyCmd}">` : `<img class="icon" src="${hotKeyCtrl}">`} on the link to cancel the download</p>
+                                                    </div>
+                                                `,
+                                                duration: 10000000,
+                                            });
+                                        }
+
+                                        displayProgress(result.progress);
+
+                                        toastDownloadingPhaseInterval = setInterval(async () => {
+
+                                            const isActive = await isTorrentActive(url);
+                                            result = isActive.torrentInfo;
+
+                                            console.log(result)
+
+                                            if (result.status === 'downloaded') {
+                                                clearInterval(toastDownloadingPhaseInterval);
+
+                                                const realdebridUrl = result.links[0];
+                    
+                                                const secondResult = await getUnrestrictedLink(realdebridUrl);
+                                                createToast({
+                                                    message:`
+                                                        <div style="text-align: center;">
+                                                            <p>Downloading file</p>
+                                                            <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${secondResult.filename}</p>
+                                                        </div>
+                                                    `, 
+                                                    duration: 5000, 
+                                                    backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                                });
+                    
+                                                await removeTorrent(result.id);
+
+                                            } else {
+
+                                            displayProgress(result.progress);
+
+                                            }
+
+                                        }, 3000);
+                                        
+                                    } else {
+                                        createToast({
+                                            message: `
+                                                <div style="text-align: center;">
+                                                    <p>This file is not cached on RealDebrid</p>
+                                                    <p style="font-weight: bold; font-size: 14px"><img class="icon" src="${hotKeyShift}"> on the link if you still want to download it</p>
+                                                </div>
+                                            `,
+                                            duration: 3000
+                                        });
+                                        await removeTorrent(result.id);
+                                    }
+                                }
+                            } finally {
+                                // Ensure this is always reset to true
+                                canClickOnMagnetLink = true;
+                            }                
+
+                        } else if (isThisUrlFromAnSupportedHoster(url)) {
+
+                            if (canClickOnMagnetLink === false) {
+                                return;
                             }
+
+                            canClickOnMagnetLink = false;
+                        
+
+                            try {
+
+                                createToast({
+                                    message: `
+                                        <div style="text-align: center;">
+                                            <p>Processing hoster link...</p>
+                                        </div>
+                                    `,
+                                    duration: 10000
+                                });
+                                console.log('Hoster link clicked:', url);
+                                const result = await getUnrestrictedLink(url);
+                                console.log('Unrestricted hoster link:', result.download);
+
+                                createToast({
+                                    message:`
+                                        <div style="text-align: center;">
+                                            <p>Downloading file</p>
+                                            <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${result.filename}</p>
+                                        </div>
+                                    `, 
+                                    duration: 5000, 
+                                    backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                });
+                            } catch (error) {
+                                throw error;
+                            } finally { 
+                                canClickOnMagnetLink = true;
+                            }
+
+                        } else {
+                            throw new Error('This url does not target a supported service');
                         }
-                    } finally {
-                        // Ensure this is always reset to true
-                        canClickOnMagnetLink = true;
-                    }                
 
-                } else if (isThisUrlFromAnSupportedHoster(url)) {
+                        
+                    } catch (error) {
 
-                    if (canClickOnMagnetLink === false) {
+                        defaultAction = true
+
+                        defaultActionTimeout = setTimeout(() => {
+                            defaultAction = false
+                        }, 400)
+
+                        if (error.message === 'This url does not target a supported service') {
+                            defaultAction = true;
+                            event.target.click();
+
+                        } else {
+
+                            canClickOnHosterLink = false;
+                            canClickOnMagnetLink = false;
+
+                            console.log(error);
+
+                            let errorMessage = error.message
+
+                            if (errorMessage.includes('bad_token')) {
+                                errorMessage = 'Your RealDebrid API key is invalid';
+                                // open popup to enter new api key
+                                chrome.runtime.sendMessage({ action: 'openPopup' });
+                            }
+
+                            else if (errorMessage.includes('Error during link debriding')) {
+                                errorMessage = 'No available file found at this hoster adress';
+                            }
+
+                            else if (errorMessage.includes('Error selecting files')) {
+                                errorMessage = 'No files found in this torrent';
+                            } else {
+                                errorMessage = errorMessage.replace(/_/g, ' ');
+                            }
+
+                            createToast({
+                                message:`
+                                    <div style="text-align: center;">
+                                        <p>${errorMessage}</p>
+                                    </div>
+                                `, 
+                                duration: 1500, 
+                                backgroundColor: 'rgba(255, 87, 87, 0.75)'
+                            });
+
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            canClickOnMagnetLink = true;
+                            canClickOnHosterLink = true;
+
+                        }
+                        
+                    }
+
+                }
+
+                action();
+
+            }
+        }, true);
+    
+    } catch (error) {
+        console.error('Error:', error);
+        // remove all event listner
+        document.removeEventListener('click', clickHandler);
+        createEventListner()
+    }
+}
+
+createEventListner()
+
+async function sendMessageToBackground(action, params = {}, maxRetries = 3, retryDelay = 1000) {
+    return new Promise((resolve, reject) => {
+        const attemptConnection = (retriesLeft) => {
+            if (retriesLeft <= 0) {
+                reject(new Error('Max retries reached. Could not establish connection to background script.'));
+                return;
+            }
+
+            try {
+                chrome.runtime.sendMessage({
+                    action,
+                    ...params
+                }, response => {
+                    if (chrome.runtime.lastError) {
+                        console.warn(`Connection attempt failed (${retriesLeft} retries left):`, chrome.runtime.lastError.message);
+                        setTimeout(() => attemptConnection(retriesLeft - 1), retryDelay);
                         return;
                     }
-
-                    canClickOnMagnetLink = false;
-                
-
-                    try {
-
-                        createToast({
-                            message: `
-                                <div style="text-align: center;">
-                                    <p>Processing hoster link...</p>
-                                </div>
-                            `,
-                            duration: 10000
-                        });
-                        console.log('Hoster link clicked:', url);
-                        const result = await getUnrestrictedLink(url);
-                        console.log('Unrestricted hoster link:', result.download);
-
-                        createToast({
-                            message:`
-                                <div style="text-align: center;">
-                                    <p>Downloading file</p>
-                                    <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${result.filename}</p>
-                                </div>
-                            `, 
-                            duration: 5000, 
-                            backgroundColor: 'rgba(87, 255, 131, 0.75)'
-                        });
-                    } catch (error) {
-                        throw error;
-                    } finally { 
-                        canClickOnMagnetLink = true;
+                    if (!response) {
+                        reject(new Error('No response received from background script'));
+                        return;
                     }
-
-                } else {
-                    throw new Error('This url does not target a supported service');
-                }
-
-                
-            } catch (error) {
-
-                defaultAction = true
-
-                defaultActionTimeout = setTimeout(() => {
-                    defaultAction = false
-                }, 400)
-
-                if (error.message === 'This url does not target a supported service') {
-                    defaultAction = true;
-                    event.target.click();
-
-                } else {
-
-                    canClickOnHosterLink = false;
-                    canClickOnMagnetLink = false;
-
-                    console.log(error);
-
-                    let errorMessage = error.message
-
-                    if (errorMessage.includes('bad_token')) {
-                        errorMessage = 'Your RealDebrid API key is invalid';
-                        // open popup to enter new api key
-                        chrome.runtime.sendMessage({ action: 'openPopup' });
-                    }
-
-                    else if (errorMessage.includes('Error during link debriding')) {
-                        errorMessage = 'No available file found at this hoster adress';
-                    }
-
-                    else if (errorMessage.includes('Error selecting files')) {
-                        errorMessage = 'No files found in this torrent';
+                    if (response.error) {
+                        reject(new Error(response.error));
                     } else {
-                        errorMessage = errorMessage.replace(/_/g, ' ');
+                        resolve(response);
                     }
-
-                    createToast({
-                        message:`
-                            <div style="text-align: center;">
-                                <p>${errorMessage}</p>
-                            </div>
-                        `, 
-                        duration: 1500, 
-                        backgroundColor: 'rgba(255, 87, 87, 0.75)'
-                    });
-
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    canClickOnMagnetLink = true;
-                    canClickOnHosterLink = true;
-
-                }
-                
+                });
+            } catch (error) {
+                console.warn(`Send attempt failed (${retriesLeft} retries left):`, error.message);
+                setTimeout(() => attemptConnection(retriesLeft - 1), retryDelay);
             }
+        };
 
-        }
-
-        action();
-
-    }
-}, true);
-
-async function getUnrestrictedLink(url) {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({
-            action: 'unrestrictLink',
-            url: url
-        }, response => {
-            if (response.error) {
-                reject(new Error(response.error));
-            } else {
-                resolve(response);
-            }
-        });
+        attemptConnection(maxRetries);
     });
 }
 
-
-async function processTorrent(magnetLink) {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({
-            action: 'unrestrictTorrent',
-            magnetLink: magnetLink
-        }, response => {
-            if (response.error) {
-                reject(new Error(response.error));
-            } else {
-                resolve(response);
-            }
-        });
-    });
+// Wrapper functions for better readability and type safety
+async function getUnrestrictedLink(url, maxRetries = 3, retryDelay = 1000) {
+    return sendMessageToBackground('unrestrictLink', { url }, maxRetries, retryDelay);
 }
 
-async function isTorrentCached(magnetLink) {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({
-            action: 'isTorrentCached',
-            magnetLink: magnetLink
-        }, response => {
-            if (response.error) {
-                reject(new Error(response.error));
-            } else {
-                resolve(response);
-            }
-        });
-    });
+async function processTorrent(magnetLink, maxRetries = 3, retryDelay = 1000) {
+    return sendMessageToBackground('unrestrictTorrent', { magnetLink }, maxRetries, retryDelay);
 }
 
-async function isTorrentActive(magnetLink) {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({
-            action: 'isTorrentActive',
-            magnetLink: magnetLink
-        }, response => {
-            if (response.error) {
-                reject(new Error(response.error));
-            } else {
-                resolve(response);
-            }
-        });
-    });
+async function isTorrentCached(magnetLink, maxRetries = 3, retryDelay = 1000) {
+    return sendMessageToBackground('isTorrentCached', { magnetLink }, maxRetries, retryDelay);
 }
 
-async function removeTorrent(torrentId) {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({
-            action: 'removeTorrent',
-            torrentId: torrentId
-        }, response => {
-            if (response.error) {
-                reject(new Error(response.error));
-            } else {
-                resolve(response);
-            }
-        });
-    });
+async function isTorrentActive(magnetLink, maxRetries = 3, retryDelay = 1000) {
+    return sendMessageToBackground('isTorrentActive', { magnetLink }, maxRetries, retryDelay);
 }
 
+async function removeTorrent(torrentId, maxRetries = 3, retryDelay = 1000) {
+    return sendMessageToBackground('removeTorrent', { torrentId }, maxRetries, retryDelay);
+}
 
 // receive log messages from background.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

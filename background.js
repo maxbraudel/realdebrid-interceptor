@@ -25,7 +25,11 @@ chrome.storage.sync.get(['realDebridApiKey'], (result) => {
                 throw new Error(`Error during link debriding: ${errorData.error || response.statusText}`);
             }
 
-            return await response.json();
+            const reponseContent = await response.json();
+
+            sendMessageToTab(`Link debrided : ${JSON.stringify(reponseContent)}`);
+
+            return reponseContent
         } catch (error) {
             console.error('Error unrestricting link:', error);
             throw error;
