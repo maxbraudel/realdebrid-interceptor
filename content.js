@@ -1,6 +1,7 @@
 const hotKeyCtrl = chrome.runtime.getURL('images/hotKeyCtrl.svg');
 const hotKeyCmd = chrome.runtime.getURL('images/hotKeyCmd.svg');
 const hotKeyShift = chrome.runtime.getURL('images/hotKeyShift.svg');
+const leftClick = chrome.runtime.getURL('images/leftClick.svg');
 
 
 function testIfMacOS() {
@@ -93,7 +94,7 @@ function createToast(inputParameters) {
 
     const message = inputParameters.message;
     const duration = inputParameters.duration || 3000;
-    const backgroundColor = inputParameters.backgroundColor || 'rgba(255, 255, 255, 0.75)';
+    const backgroundColor = inputParameters.backgroundColor || 'rgba(255, 255, 255, 0.65)';
 
     const toastId = 'realdebrid-extension-toast';
     const existingToast = document.getElementById(toastId);
@@ -177,7 +178,7 @@ function createToast(inputParameters) {
             background: rgba(255, 255, 255, 0.75);
             border-radius: 16px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(9.6px);
+            backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(9.6px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 10px 20px;
@@ -212,6 +213,10 @@ function createToast(inputParameters) {
 
         .icon {
             transform: translateY(5px);
+        }
+
+        .icon2 {
+            transform: translateY(3px);
         }
 
         #realdebrid-extension-message.fade-out {
@@ -375,7 +380,7 @@ async function createEventListner() {
                                                             <div class="loading-bar" style="position: absolute; z-index: -1; background-color: green; width: calc(${result.progress / 100} * 30vw); height: 20px;"></div>
                                                             <div style="position: absolute; z-index: -2; background-color: grey; width: 30vw; height: 20px"></div>
                                                         </div>
-                                                        <p style="font-weight: bold; font-size: 14px;">${isMacOS ? `<img class="icon" src="${hotKeyCmd}">` : `<img class="icon" src="${hotKeyCtrl}">`} on the link to cancel the download</p>
+                                                        <p style="font-weight: bold; font-size: 14px;">${isMacOS ? `<img class="icon" src="${hotKeyCmd}">` : `<img class="icon" src="${hotKeyCtrl}">`} <img class="icon2" src="${leftClick}"> on the link to cancel the download</p>
                                                     </div>
                                                 `,
                                                 duration: 10000000,
@@ -423,7 +428,7 @@ async function createEventListner() {
                                             message: `
                                                 <div style="text-align: center;">
                                                     <p>This file is not cached on RealDebrid</p>
-                                                    <p style="font-weight: bold; font-size: 14px"><img class="icon" src="${hotKeyShift}"> on the link if you still want to download it</p>
+                                                    <p style="font-weight: bold; font-size: 14px"><img class="icon" src="${hotKeyShift}"> <img class="icon2" src="${leftClick}"> on the link if you still want to download it</p>
                                                 </div>
                                             `,
                                             duration: 3000
@@ -556,7 +561,7 @@ async function sendMessageToBackground(action, params = {}, maxRetries = 3, retr
     return new Promise((resolve, reject) => {
         const attemptConnection = (retriesLeft) => {
             if (retriesLeft <= 0) {
-                reject(new Error('Max retries reached. Could not establish connection to background script.'));
+                reject(new Error('Could not establish connection with RealDebrid Interceptor.'));
                 return;
             }
 
