@@ -250,12 +250,6 @@ function isThisUrlATorrentMagnet(url) {
 let canClickOnMagnetLink = true;
 let canClickOnHosterLink = true;
 
-let defaultActionTimeout;
-
-let defaultAction = false;
-
-
-
 async function createEventListner() {
 
     console.log("createEventListner")
@@ -269,17 +263,12 @@ async function createEventListner() {
             
             if (link) {
 
-                clearTimeout(defaultActionTimeout)
 
                 async function action() {
 
-                    if (defaultAction === true || ((event.ctrlKey || event.metaKey) && event.shiftKey)) {
-                        defaultAction = false;
+                    if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
                         return;
                     }
-
-                    // Prevent the default link behavior
-                    event.preventDefault();
                     
                     // Get the href attribute
                     const url = link.href;
@@ -287,6 +276,8 @@ async function createEventListner() {
                     try {
 
                         if (isThisUrlATorrentMagnet(url)) {
+
+                            event.preventDefault();
 
                             if (canClickOnMagnetLink === false) {
                                 return;
@@ -443,12 +434,13 @@ async function createEventListner() {
 
                         } else if (isThisUrlFromAnSupportedHoster(url)) {
 
+                            event.preventDefault();
+
                             if (canClickOnMagnetLink === false) {
                                 return;
                             }
 
                             canClickOnMagnetLink = false;
-                        
 
                             try {
 
@@ -480,63 +472,45 @@ async function createEventListner() {
                                 canClickOnMagnetLink = true;
                             }
 
-                        } else {
-                            throw new Error('This url does not target a supported service');
                         }
 
                         
                     } catch (error) {
 
-                        defaultAction = true
+                        canClickOnHosterLink = false;
+                        canClickOnMagnetLink = false;
 
-                        defaultActionTimeout = setTimeout(() => {
-                            defaultAction = false
-                        }, 400)
+                        let errorMessage = error.message
 
-                        if (error.message === 'This url does not target a supported service') {
-                            defaultAction = true;
-                            event.target.click();
-
-                        } else {
-
-                            canClickOnHosterLink = false;
-                            canClickOnMagnetLink = false;
-
-                            console.log(error);
-
-                            let errorMessage = error.message
-
-                            if (errorMessage.includes('bad_token') || errorMessage.includes('401')) {
-                                errorMessage = 'Your RealDebrid API key is invalid';
-                                // open popup to enter new api key
-                                chrome.runtime.sendMessage({ action: 'openPopup' });
-                            }
-
-                            else if (errorMessage.includes('Error during link debriding')) {
-                                errorMessage = 'No available file found at this hoster adress';
-                            }
-
-                            else if (errorMessage.includes('Error selecting files')) {
-                                errorMessage = 'No files found in this torrent';
-                            } else {
-                                errorMessage = errorMessage.replace(/_/g, ' ');
-                            }
-
-                            createToast({
-                                message:`
-                                    <div style="text-align: center;">
-                                        <p>${errorMessage}</p>
-                                    </div>
-                                `, 
-                                duration: 1500, 
-                                backgroundColor: 'rgba(255, 87, 87, 0.75)'
-                            });
-
-                            await new Promise(resolve => setTimeout(resolve, 1000));
-                            canClickOnMagnetLink = true;
-                            canClickOnHosterLink = true;
-
+                        if (errorMessage.includes('bad_token') || errorMessage.includes('401')) {
+                            errorMessage = 'Your RealDebrid API key is invalid';
+                            // open popup to enter new api key
+                            chrome.runtime.sendMessage({ action: 'openPopup' });
                         }
+
+                        else if (errorMessage.includes('Error during link debriding')) {
+                            errorMessage = 'No available file found at this hoster adress';
+                        }
+
+                        else if (errorMessage.includes('Error selecting files')) {
+                            errorMessage = 'No files found in this torrent';
+                        } else {
+                            errorMessage = errorMessage.replace(/_/g, ' ');
+                        }
+
+                        createToast({
+                            message:`
+                                <div style="text-align: center;">
+                                    <p>${errorMessage}</p>
+                                </div>
+                            `, 
+                            duration: 1500, 
+                            backgroundColor: 'rgba(255, 87, 87, 0.75)'
+                        });
+
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        canClickOnMagnetLink = true;
+                        canClickOnHosterLink = true;
                         
                     }
 
@@ -614,6 +588,10 @@ async function isTorrentActive(magnetLink, maxRetries = 3, retryDelay = 1000) {
 
 async function removeTorrent(torrentId, maxRetries = 3, retryDelay = 1000) {
     return sendMessageToBackground('removeTorrent', { torrentId }, maxRetries, retryDelay);
+}
+
+async function openUrl(url, openTab = false, maxRetries = 3, retryDelay = 1000) {
+    return sendMessageToBackground('openUrl', { url, openTab }, maxRetries, retryDelay);
 }
 
 // receive log messages from background.js

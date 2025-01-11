@@ -244,8 +244,38 @@ chrome.storage.sync.get(['realDebridApiKey'], (result) => {
         }
     }
 
+    function openUrl(url, openTab) {
+        // Validate URL
+        try {
+          new URL(url);
+        } catch (error) {
+          console.error('Invalid URL provided:', error);
+          return Promise.reject('Invalid URL');
+        }
+      
+        // Open URL based on openTab preference
+        if (openTab) {
+          // Open in new tab
+          return chrome.tabs.create({
+            url: url,
+            active: true // Make the new tab active
+          });
+        } else {
+          // Update current tab
+          return chrome.tabs.update({ url: url });
+        }
+    }
+
     // Add this to your existing message listener in background.js
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (request.action === 'openUrl') {
+            openUrl(request.url, request.openTab)
+                .then(result => {
+                    sendResponse(result)
+                })
+                .catch(error => sendResponse({ error: error.message }));
+            return true; // Will respond asynchronously
+        }
         if (request.action === 'setApiKey') {
             realDebridApiKey = request.realDebridApiKey;
             sendResponse('Api key set');
