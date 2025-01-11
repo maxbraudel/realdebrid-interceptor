@@ -3,6 +3,14 @@ const hotKeyCmd = chrome.runtime.getURL('images/hotKeyCmd.svg');
 const hotKeyShift = chrome.runtime.getURL('images/hotKeyShift.svg');
 const leftClick = chrome.runtime.getURL('images/leftClick.svg');
 
+// COLORS
+
+const colorSucess = "rgba(87, 255, 131, 0.75)"
+const colorError = "rgba(255, 87, 87, 0.75)"
+const colorNeutral = "rgba(255, 255, 255, 0.75)"
+const colorProgressBar = 'rgb(44, 199, 85)'
+const colorProgressBarBackground = "rgb(97, 107, 100)"
+
 
 function testIfMacOS() {
     return navigator.userAgent.includes('Macintosh');
@@ -94,7 +102,7 @@ function createToast(inputParameters) {
 
     const message = inputParameters.message;
     const duration = inputParameters.duration || 3000;
-    const backgroundColor = inputParameters.backgroundColor || 'rgba(255, 255, 255, 0.65)';
+    const backgroundColor = inputParameters.backgroundColor || colorNeutral;
 
     const toastId = 'realdebrid-extension-toast';
     const existingToast = document.getElementById(toastId);
@@ -175,7 +183,7 @@ function createToast(inputParameters) {
             top: 0;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.75);
+            background: ${colorNeutral};
             border-radius: 16px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(25px);
@@ -313,7 +321,7 @@ async function createEventListner() {
                                                 </div>
                                             `,
                                             duration: 1000,
-                                            backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                            backgroundColor: colorSucess
                                         });
                                         await removeTorrent(isActive.torrentInfo.id);
                                     } else {
@@ -323,7 +331,7 @@ async function createEventListner() {
                                                     <p>This torrent file is not in your list or has already been removed</p>
                                                 </div>
                                             `,
-                                            backgroundColor: 'rgba(255, 87, 87, 0.75)'
+                                            backgroundColor: colorError
                                         });
                                         console.log('This torrent file is not in your list and cannot be removed');
                                     }
@@ -353,7 +361,7 @@ async function createEventListner() {
                                             </div>
                                         `, 
                                         duration: 5000, 
-                                        backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                        backgroundColor: colorSucess
                                     });
 
                                     await removeTorrent(result.id);
@@ -366,10 +374,9 @@ async function createEventListner() {
                                                     <div style="width: 30vw; text-align: center; display:flex; flex-direction: column; gap: 5px;">
                                                         <p>Downloading torrent</p>
                                                         <p style="font-size: 14px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${result.filename}</p>
-                                                        <div style="display: flex; flex-direction: column; justify-content: center;">
-                                                            <p style="position: relative; text-align: center; color: white;">${progress}%</p>
-                                                            <div class="loading-bar" style="position: absolute; z-index: -1; background-color: green; width: calc(${result.progress / 100} * 30vw); height: 20px;"></div>
-                                                            <div style="position: absolute; z-index: -2; background-color: grey; width: 30vw; height: 20px"></div>
+                                                        <div style="display: flex; flex-direction: column; justify-content: center; border-radius: 6px; overflow: hidden; ; background-color: ${colorProgressBarBackground};">
+                                                            <p style="position: absolute; left: 50%; transform: translateX(-50%); text-align: center; color: white;">${progress}%</p>
+                                                            <div class="loading-bar" style="background-color: ${colorProgressBar}; width: calc(${progress / 100} * 30vw); height: 20px;"></div>
                                                         </div>
                                                         <p style="font-weight: bold; font-size: 14px;">${isMacOS ? `<img class="icon" src="${hotKeyCmd}">` : `<img class="icon" src="${hotKeyCtrl}">`} <img class="icon2" src="${leftClick}"> on the link to cancel the download</p>
                                                     </div>
@@ -401,7 +408,7 @@ async function createEventListner() {
                                                         </div>
                                                     `, 
                                                     duration: 5000, 
-                                                    backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                                    backgroundColor: colorSucess
                                                 });
                     
                                                 await removeTorrent(result.id);
@@ -464,7 +471,7 @@ async function createEventListner() {
                                         </div>
                                     `, 
                                     duration: 5000, 
-                                    backgroundColor: 'rgba(87, 255, 131, 0.75)'
+                                    backgroundColor: colorSucess
                                 });
                             } catch (error) {
                                 throw error;
@@ -505,7 +512,7 @@ async function createEventListner() {
                                 </div>
                             `, 
                             duration: 1500, 
-                            backgroundColor: 'rgba(255, 87, 87, 0.75)'
+                            backgroundColor: colorError
                         });
 
                         await new Promise(resolve => setTimeout(resolve, 1000));
